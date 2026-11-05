@@ -1,6 +1,6 @@
 [package]
 name = "mt2l"
-version = "0.1.0"
+version = "0.1.1"
 entrypoint = "mt2l.typ"
 compiler = "0.15.0"
 authors = ["louis2038 <@louis2038>"]

@@ -3,12 +3,16 @@
 set -euo pipefail
 source_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$source_root/scripts/dependencies.sh"
+source "$source_root/scripts/manage.sh"
 if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
   cat <<'HELP'
-Usage: ./install.sh
+Usage: ./install.sh [--force | --uninstall]
 
 Install the mt2l Typst package and mt2l command for the current user, without sudo.
 Requires Typst >= 0.15 and Pandoc >= 3.7. No downloads or shell-profile changes.
+Installs the local version when newer; skips the same or a newer installation.
+--force       Reinstall or deliberately downgrade to the local version.
+--uninstall   Remove managed versions and the launcher; no dependencies needed.
 
 Optional environment variables:
   XDG_DATA_HOME       Data directory (default: ~/.local/share on Linux).
@@ -17,15 +21,32 @@ Optional environment variables:
 HELP
   exit 0
 fi
-if (($#)); then printf 'Unknown argument: %s. Use --help.\n' "$1" >&2; exit 2; fi
+force=0
+uninstall=0
+while (($#)); do
+  case "$1" in
+    --force) force=1 ;;
+    --uninstall) uninstall=1 ;;
+    *) printf 'Unknown argument: %s. Use --help.\n' "$1" >&2; exit 2 ;;
+  esac
+  shift
+done
+mt2l_install_locations
+if ((uninstall)); then
+  if ((force)); then printf '%s\n' '--force and --uninstall cannot be combined.' >&2; exit 2; fi
+  mt2l_uninstall
+  exit 0
+fi
 mt2l_check_dependencies || exit 1
 version=$(mt2l_read_version "$source_root/typst.toml")
-data_dir=${XDG_DATA_HOME:-"$HOME/.local/share"}
-if [[ -z "${XDG_DATA_HOME:-}" && "$(uname -s)" == Darwin ]]; then
-  data_dir="$HOME/Library/Application Support"
+installed_version=$(mt2l_installed_version)
+if [[ -n "$installed_version" ]] && ((force == 0)); then
+  newest=$(printf '%s\n%s\n' "$version" "$installed_version" | LC_ALL=C sort -t . -k1,1n -k2,2n -k3,3n | tail -n 1)
+  if [[ "$newest" == "$installed_version" ]]; then
+    printf 'mt2l %s is already installed (local source: %s). No changes needed.\n' "$installed_version" "$version"
+    exit 0
+  fi
 fi
-package_root=${TYPST_PACKAGE_PATH:-"$data_dir/typst/packages"}
-bin_dir=${MT2L_BIN_DIR:-"$HOME/.local/bin"}
 mkdir -p "$package_root/local/mt2l" "$bin_dir"
 package_parent=$(cd "$package_root/local/mt2l" && pwd)
 bin_dir=$(cd "$bin_dir" && pwd)
@@ -66,6 +87,8 @@ trap cleanup EXIT
 mkdir -p "$staging/scripts/mt2l" "$staging/templates" "$staging/examples"
 install -m 644 "$source_root/typst.toml" "$source_root/mt2l.typ" "$source_root/README.md" "$source_root/LICENSE" "$staging/"
 install -m 644 "$source_root/scripts/mt2l.lua" "$source_root/scripts/dependencies.sh" "$staging/scripts/"
+install -m 644 "$source_root/scripts/manage.sh" "$staging/scripts/"
+install -m 755 "$source_root/install.sh" "$source_root/get.sh" "$staging/"
 install -m 644 "$source_root/scripts/mt2l/lexer.lua" "$staging/scripts/mt2l/"
 install -m 755 "$source_root/scripts/convert.sh" "$staging/scripts/"
 install -m 644 "$source_root/templates/default.tex" "$staging/templates/"
@@ -75,6 +98,7 @@ printf 'mt2l %s\n' "$version" > "$staging/.mt2l-managed"
   printf '#!/usr/bin/env bash\n# Installed by mt2l/install.sh.\n'
   # Shell-quote install paths, including spaces and quotes. No repo dependency.
   printf 'export TYPST_PACKAGE_PATH=${TYPST_PACKAGE_PATH:-%q}\n' "$(dirname "$(dirname "$package_parent")")"
+  printf 'export MT2L_BIN_DIR=${MT2L_BIN_DIR:-%q}\n' "$bin_dir"
   printf 'exec bash %q "$@"\n' "$destination/scripts/convert.sh"
 } > "$launcher"
 chmod 755 "$launcher"

@@ -216,7 +216,9 @@ load_module = function(path)
       local target = unquote(declaration:sub(from, finish - 1))
       local package_version = target:match("^@[%w_%-]+/mt2l:(.+)$")
       if package_version then
-        assert(package_version == engine_version,
+        -- Patch releases retain the contract API. Keep existing documents
+        -- exportable when the CLI is updated within the same minor version.
+        assert(package_version:match("^(%d+%.%d+)%.%d+$") == engine_version:match("^(%d+%.%d+)%.%d+$"),
           "mt2l package " .. package_version .. " does not match engine " .. engine_version
             .. "; use the matching mt2l command or update the import")
       end

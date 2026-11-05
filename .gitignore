@@ -22,6 +22,7 @@
 !/scripts/
 !/scripts/convert.sh
 !/scripts/dependencies.sh
+!/scripts/manage.sh
 !/scripts/mt2l.lua
 !/scripts/mt2l/
 !/scripts/mt2l/lexer.lua

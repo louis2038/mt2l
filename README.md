@@ -11,7 +11,7 @@ compiles normally with Typst.
 > **Typst >= 0.15** and **Pandoc >= 3.7**.
 
 ````typst
-#import "@preview/mt2l:0.1.0": mt2l
+#import "@preview/mt2l:0.1.1": mt2l
 
 #let highlight = mt2l(
   fn: strong,
@@ -42,14 +42,18 @@ Use `typst compile main.typ` for the normal Typst PDF.
 Import the package in your document:
 
 ```typst
-#import "@preview/mt2l:0.1.0": mt2l, mt2l-export-meta
+#import "@preview/mt2l:0.1.1": mt2l, mt2l-export-meta
 ```
 
 Install the CLI on Linux or macOS, without sudo:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/louis2038/mt2l/v0.1.0/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/louis2038/mt2l/main/get.sh | bash
 ```
+
+The installer selects the latest stable `vX.Y.Z` tag from GitHub and upgrades
+older installations. It skips reinstalling the same version and does not
+downgrade a newer installation unless `--force` is requested.
 
 The `@preview` import requires publication on Typst Universe. Until it is
 available, use the local installation below.
@@ -65,7 +69,7 @@ From a checkout of this repository:
 Then use the local package:
 
 ```typst
-#import "@local/mt2l:0.1.0": mt2l, mt2l-export-meta
+#import "@local/mt2l:0.1.1": mt2l, mt2l-export-meta
 ```
 
 This installs both the package and the CLI from your local files, without
@@ -79,6 +83,31 @@ If `mt2l` is not found after installation, add its directory to your `PATH`:
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
 ```
+
+### Updating and uninstalling
+
+```sh
+mt2l --update                       # Check GitHub and install the latest stable version
+mt2l --update --version 0.1.1       # Select a specific version
+mt2l --update --force               # Reinstall even if already current
+mt2l --uninstall                    # Remove mt2l from this installation
+```
+
+From a local checkout:
+
+```sh
+./install.sh                        # Install a newer local version; otherwise do nothing
+./install.sh --force                # Reinstall or deliberately downgrade to the local version
+./install.sh --uninstall            # Uninstall without network access
+```
+
+The local installer never checks GitHub; use `mt2l --update` or run the curl
+command again to check for remote updates. Uninstalling removes the launcher
+and all local package versions marked as installed by mt2l. It works without
+Typst or Pandoc and preserves documents, unrelated commands, unmanaged
+packages, and the Typst Universe cache. Updates preserve older package
+versions so existing imports continue to resolve. Patch versions within the
+same major/minor series are compatible with the exporter.
 
 A LaTeX installation is needed only to compile the exported `.tex` file.
 Compile from its output directory so relative graphics paths resolve:
@@ -99,7 +128,7 @@ Wrap a Typst function with a conversion contract. In normal Typst compilation,
 For example, define a custom theorem and its LaTeX environment:
 
 ````typst
-#import "@preview/mt2l:0.1.0": mt2l
+#import "@preview/mt2l:0.1.1": mt2l
 
 #let theorem(name: none, body) = block[
   #strong[Theorem: #name]
@@ -139,7 +168,7 @@ This is useful for CeTZ drawings, styled matrices, and other graphics that
 should retain their Typst appearance.
 
 ````typst
-#import "@preview/mt2l:0.1.0": mt2l
+#import "@preview/mt2l:0.1.1": mt2l
 
 #let disk = mt2l(
   fn: circle,
@@ -243,7 +272,7 @@ Export contextual values to both the outer document template and individual
 contracts with `mt2l-export-meta`:
 
 ```typst
-#import "@preview/mt2l:0.1.0": mt2l-export-meta
+#import "@preview/mt2l:0.1.1": mt2l-export-meta
 
 #set text(size: 10pt)
 #mt2l-export-meta(ctx => (
@@ -327,6 +356,8 @@ dollar as `$$` inside a template. This escaping does not apply to the literal
 mt2l [--root DIR] [--template FILE] INPUT [OUTPUT]
 mt2l --help
 mt2l --version
+mt2l --update [--version X.Y.Z] [--force]
+mt2l --uninstall
 ```
 
 `OUTPUT` defaults to the input filename with a `.tex` extension. Output
@@ -338,9 +369,9 @@ For a source checkout, `./scripts/convert.sh` accepts the same arguments.
 ### Installation paths
 
 On Linux, the package and exporter are installed under
-`~/.local/share/typst/packages/local/mt2l/0.1.0/`, with the launcher in
+`~/.local/share/typst/packages/local/mt2l/0.1.1/`, with the launcher in
 `~/.local/bin/mt2l`. On macOS, package data defaults to
-`~/Library/Application Support/typst/packages/local/mt2l/0.1.0/`.
+`~/Library/Application Support/typst/packages/local/mt2l/0.1.1/`.
 
 | Environment variable | Purpose |
 | --- | --- |

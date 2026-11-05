@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# General entry point. See --help; convert-test.sh retains the original defaults.
+# General entry point for exporting and managing mt2l.
 set -euo pipefail
 
 converter_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -9,6 +9,8 @@ template="$converter_root/templates/default.tex"
 usage() {
   cat <<'HELP'
 Usage: mt2l [--root DIR] [--template FILE] INPUT [OUTPUT]
+       mt2l --update [--version X.Y.Z] [--force]
+       mt2l --uninstall
 
 Export a Typst document to LaTeX. OUTPUT defaults to INPUT with a .tex suffix.
 --root defaults to the input directory; set it for imports from parent folders.
@@ -23,6 +25,10 @@ while (($#)); do
       shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --version) printf 'mt2l %s\n' "$(mt2l_read_version "$converter_root/typst.toml")"; exit 0 ;;
+    --update) shift; exec bash "$converter_root/get.sh" "$@" ;;
+    --uninstall)
+      if (($# != 1)); then printf 'Use mt2l --uninstall without other arguments.\n' >&2; exit 2; fi
+      exec bash "$converter_root/install.sh" --uninstall ;;
     --) shift; break ;;
     -*) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
     *) break ;;
