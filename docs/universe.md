@@ -1,5 +1,15 @@
 # mt2l — Modular Typst to LaTeX
 
+> [!WARNING]
+> **AI DISCLOSURE — VIBE-CODED, EXPERIMENTAL SOFTWARE**
+>
+> This codebase was entirely vibe-coded with AI in a very short time.
+> It is still unstable: expect bugs, rough edges, and incorrect or incomplete
+> LaTeX exports. Please check the generated output carefully.
+>
+> **Found a bug? [Open a GitHub issue](https://github.com/louis2038/mt2l/issues).**
+> A small reproducible example and the error message will help us fix it.
+
 Write research papers in Typst and export editable LaTeX. Start with the
 built-in paper environment, or define conversion bindings for your own
 functions. The same document still compiles normally with Typst.
