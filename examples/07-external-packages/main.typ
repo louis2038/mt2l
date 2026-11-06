@@ -1,5 +1,5 @@
-// Self-contained test suite for scripts/mt2l.lua.
-#import "../mt2l.typ": mt2l, mt2l-export-meta
+// Advanced adapters for third-party Typst drawing packages.
+#import "@local/mt2l:0.1.2": mt2l, mt2l-export-meta
 #import "@preview/pavemat:0.2.0": pavemat
 #import "@preview/cetz:0.5.2" as cetz
 
@@ -26,6 +26,10 @@
 \label{$RAW.ARGS.id$}
 $BODY$
 \end{definition}
+```,
+  latex-preamble: ```latex
+\usepackage{amsthm,graphicx}
+\newtheorem{definition}{Definition}
 ```,
   fn: definition,
 )

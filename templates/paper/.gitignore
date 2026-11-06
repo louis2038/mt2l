@@ -1,0 +1,56 @@
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.lol
+*.loa
+*.loe
+*.thm
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.xdv
+*.synctex
+*.synctex.gz
+*.synctex(busy)
+
+# BibTeX / Biber
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# latexmk
+*.fdb_latexmk
+*.fls
+
+# Indexes and glossaries
+*.idx
+*.ind
+*.ilg
+*.glo
+*.gls
+*.glg
+*.acn
+*.acr
+*.alg
+*.ist
+*.glsdefs
+*.xdy
+
+# Other temporary compilation files
+*.spl
+*.fvrb
+*.listing
+*.tdo
+*.maf
+*.mtc*
+*.bak
+*.tmp
+.mt2l-*
+
+# Keep source .typ/.tex/.bib files, final PDFs, and exported *-assets/ folders.

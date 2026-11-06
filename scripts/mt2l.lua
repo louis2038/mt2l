@@ -250,9 +250,9 @@ load_module = function(path)
       if target:sub(1, 1) == "@" and not package_version then return end
       -- The bundled bindings are shared by the CLI and the Typst package.
       -- Other third-party packages still require explicit local adapters.
+      local template_root = pandoc.path.join({ converter_root, "templates" }) .. "/"
       local bundled = path == pandoc.path.join({ converter_root, "mt2l.typ" })
-        or path == pandoc.path.join({ converter_root, "templates", "paper.typ" })
-        or path == pandoc.path.join({ converter_root, "templates", "statements.typ" })
+        or path:sub(1, #template_root) == template_root
       local imported = load_module(package_version
         and pandoc.path.join({ converter_root, "mt2l.typ" })
         or import_path(target, path, bundled and converter_root or nil)).exports
@@ -596,7 +596,11 @@ local function native_call(alias, args_source, scope)
     local path = assert(positional[1], "bibliography export needs one literal .bib path")
     local literal = natural.id(trim(path:match("^path%s*%((.*)%)$") or path), lex, unquote)
     assert(literal and literal:lower():match("%.bib$"), "bibliography export needs one literal .bib path")
-    local binding = load_module(pandoc.path.join({ converter_root, "mt2l.typ" })).exports.references
+    local binding = scope.references or {
+      alias = "bibliography", fn = "bibliography", mode = "syntax", placement = "block",
+      directory = project_root, asset_argument = "path", latex_preamble = "",
+      latex_template = "\\bibliographystyle{plainnat}\n\\bibliography{$PATH$}",
+    }
     local latex = render_contract(binding, "path: " .. path, nil, scope)
     if named.title and named.title ~= "auto" then
       local title = named.title == "none" and "" or latex_argument(named.title, scope)

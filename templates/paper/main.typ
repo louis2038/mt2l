@@ -1,6 +1,6 @@
-#import "@local/mt2l:0.1.2": paper, abstract, definition, theorem, proof
+#import "binding.typ": *
 
-#show: paper.with(
+#show: template.with(
   title: "The title of your paper",
   authors: ("First Author", "Second Author"),
   affiliations: ("Your University",),

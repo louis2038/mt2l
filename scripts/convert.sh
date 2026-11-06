@@ -5,22 +5,151 @@ set -euo pipefail
 converter_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source "$converter_root/scripts/dependencies.sh"
 project_root=${MT2L_PROJECT_ROOT:-}
-template="$converter_root/templates/default.tex"
+# Registry: one "name=directory" entry per template. Paths may contain spaces.
+# Add "paper2=$converter_root/templates/paper2" to register another template.
+MT2L_TEMPLATES=(
+  "default=$converter_root/templates/default"
+  "paper=$converter_root/templates/paper"
+)
+mt2l_template_directory() {
+  local entry
+  for entry in "${MT2L_TEMPLATES[@]}"; do
+    if [[ "${entry%%=*}" == "$1" ]]; then printf '%s\n' "${entry#*=}"; return 0; fi
+  done
+  return 1
+}
+template="$(mt2l_template_directory default)/latex_template/default.tex"
 usage() {
   cat <<'HELP'
-Usage: mt2l [--root DIR] [--template FILE] INPUT [OUTPUT]
-       mt2l --init [DIR]
-       mt2l --update [--version X.Y.Z] [--force]
-       mt2l --uninstall
+mt2l - Export Typst documents to editable LaTeX
 
-Export a Typst document to LaTeX. OUTPUT defaults to INPUT with a .tex suffix.
---root defaults to the input directory; set it for imports from parent folders.
-The output directory is created automatically. Requires Typst and Pandoc.
---init creates a ready-to-edit paper directory (default: paper).
---template paper selects the bundled LaTeX paper template explicitly.
-Documents using #show: paper.with(...) select it automatically.
+CREATE A PROJECT
+  mt2l init NAME [DIR]          Download a model from the installed version's GitHub tag.
+  mt2l init --local NAME [DIR]  Copy a model from this installation, without downloading.
+
+  NAME is one of the models listed below. DIR defaults to NAME.
+  The entire model is copied: main.typ, paper.bib, template.typ,
+  binding.typ, and latex_template/. All files are editable.
+  An existing destination is never overwritten.
+
+AVAILABLE MODELS
+HELP
+  local entry name description latex_file
+  for entry in "${MT2L_TEMPLATES[@]}"; do
+    name=${entry%%=*}
+    case "$name" in
+      default) description="Minimal document: text, mathematics, and bibliography." ;;
+      paper) description="Research paper: statements, proofs, references, figures, and tables." ;;
+      *) description="Custom project model." ;;
+    esac
+    printf '  %-12s %s\n' "$name" "$description"
+    for latex_file in "${entry#*=}"/latex_template/*.tex; do
+      [[ -f "$latex_file" ]] || continue
+      printf '               LaTeX file: latex_template/%s\n' "$(basename "$latex_file")"
+    done
+  done
+  printf '\n  Local model directory: %s/templates/\n' "$converter_root"
+  cat <<'HELP'
+
+EXPORT
+  mt2l INPUT [OUTPUT] [--template FILE] [--root DIR]
+
+  INPUT             Source .typ file.
+  OUTPUT            Destination .tex file; defaults to the input name with .tex.
+  --template FILE   Path to your editable LaTeX template, e.g. latex_template/paper.tex.
+                    This is a file path, not a model name such as "paper".
+                    If omitted, use a minimal article with no theorem environments.
+  --root DIR        Typst project root; defaults to the input directory.
+
+  Export requires Typst >= 0.15 and Pandoc >= 3.7.
+
+EXAMPLES
+  mt2l init paper my-paper
+  cd my-paper
+  mt2l main.typ --template latex_template/paper.tex
+
+  # Offline alternative (creates a separate project):
+  mt2l init --local default my-notes
+
+MANAGE THE INSTALLATION
+  mt2l --version                         Show the installed version.
+  mt2l --update                          Install the latest stable GitHub release.
+  mt2l --update --version X.Y.Z           Select a specific release.
+  mt2l --update --force                   Reinstall or allow a downgrade.
+  mt2l --uninstall                       Remove this managed installation.
+  mt2l --help                            Show this help and available models.
 HELP
 }
+
+if [[ "${1:-}" == init ]]; then
+  shift
+  local_init=0
+  init_args=()
+  for argument in "$@"; do
+    case "$argument" in
+      -h|--help) usage; exit 0 ;;
+      --local) local_init=1 ;;
+      -*) printf 'Unknown init option: %s\n' "$argument" >&2; exit 2 ;;
+      *) init_args+=("$argument") ;;
+    esac
+  done
+  if ((${#init_args[@]} < 1 || ${#init_args[@]} > 2)); then
+    printf 'Usage: mt2l init [--local] NAME [DIR]\n' >&2; exit 2
+  fi
+  preset=${init_args[0]}
+  if ! preset_dir=$(mt2l_template_directory "$preset"); then
+    printf 'Unknown template: %s\n' "$preset" >&2
+    usage >&2; exit 2
+  fi
+  destination=${init_args[1]:-$preset}
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    printf 'Destination already exists: %s\n' "$destination" >&2; exit 1
+  fi
+  version=$(mt2l_read_version "$converter_root/typst.toml")
+  staging=$(mktemp -d)
+  trap 'rm -rf -- "$staging"' EXIT
+  mkdir "$staging/project"
+  if ((local_init)); then
+    cp -R -- "$preset_dir/." "$staging/project/"
+  else
+    for program in curl tar; do
+      if ! command -v "$program" >/dev/null 2>&1; then
+        printf 'Required program not found: %s\n' "$program" >&2; exit 127
+      fi
+    done
+    url="https://codeload.github.com/louis2038/mt2l/tar.gz/refs/tags/v$version"
+    printf 'Downloading template %s from mt2l v%s...\n' "$preset" "$version"
+    if ! curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 \
+      --connect-timeout 15 --max-time 120 --output "$staging/release.tar.gz" "$url"; then
+      printf 'Download failed. For the bundled template, use: mt2l init --local %q %q\n' "$preset" "$destination" >&2
+      exit 1
+    fi
+    tar -tzf "$staging/release.tar.gz" > "$staging/contents"
+    IFS= read -r archive_root < "$staging/contents"
+    archive_root=${archive_root%%/*}
+    relative_dir=${preset_dir#"$converter_root/"}
+    tar -xzf "$staging/release.tar.gz" -C "$staging/project" --strip-components=3 \
+      -- "$archive_root/$relative_dir/"
+  fi
+  for name in main.typ template.typ binding.typ; do
+    if [[ ! -f "$staging/project/$name" ]]; then
+      printf 'Template %s is missing %s.\n' "$preset" "$name" >&2; exit 1
+    fi
+  done
+  latex_files=("$staging/project"/latex_template/*.tex)
+  if [[ ! -f "${latex_files[0]}" ]]; then
+    printf 'Template %s has no LaTeX template.\n' "$preset" >&2; exit 1
+  fi
+  mkdir -p -- "$(dirname "$destination")"
+  # mkdir also protects against a destination created during the download.
+  mkdir -- "$destination"
+  cp -R -- "$staging/project/." "$destination/"
+  printf 'Created %s from template %s.\n' "$destination" "$preset"
+  printf 'cd %q\n' "$destination"
+  printf 'typst compile main.typ\nmt2l main.typ --template latex_template/%s\n' "$(basename "${latex_files[0]}")"
+  exit 0
+fi
+positional=()
 while (($#)); do
   case "$1" in
     --root|--template)
@@ -29,38 +158,20 @@ while (($#)); do
       shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --version) printf 'mt2l %s\n' "$(mt2l_read_version "$converter_root/typst.toml")"; exit 0 ;;
-    --init)
-      shift
-      if (($# > 1)); then printf 'Usage: mt2l --init [DIR]\n' >&2; exit 2; fi
-      destination=${1:-paper}
-      if [[ -e "$destination" || -L "$destination" ]]; then
-        printf 'Paper directory already exists: %s\n' "$destination" >&2; exit 1
-      fi
-      mkdir -p -- "$(dirname "$destination")"
-      mkdir -- "$destination"
-      # Only this newly created directory is removed if copying fails.
-      trap 'rm -rf -- "$destination"' EXIT
-      install -m 644 "$converter_root/starter/main.typ" "$destination/main.typ"
-      install -m 644 "$converter_root/starter/paper.bib" "$destination/paper.bib"
-      install -m 644 "$converter_root/templates/LICENSE-latex-paper" "$destination/LICENSE-latex-paper"
-      trap - EXIT
-      printf 'Created %s/main.typ and paper.bib\n\n' "$destination"
-      printf 'Typst PDF: typst compile %q/main.typ\nLaTeX:     mt2l %q/main.typ\n' "$destination" "$destination"
-      exit 0 ;;
     --update) shift; exec bash "$converter_root/get.sh" "$@" ;;
     --uninstall)
       if (($# != 1)); then printf 'Use mt2l --uninstall without other arguments.\n' >&2; exit 2; fi
       exec bash "$converter_root/install.sh" --uninstall ;;
-    --) shift; break ;;
+    --) shift; positional+=("$@"); break ;;
     -*) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
-    *) break ;;
+    *) positional+=("$1"); shift ;;
   esac
 done
+set -- "${positional[@]}"
 if (($# < 1 || $# > 2)); then usage >&2; exit 2; fi
 mt2l_check_dependencies || exit 127
 input=$1
 output=${2:-"${input%.typ}.tex"}
-if [[ "$template" == paper ]]; then template="$converter_root/templates/paper.tex"; fi
 if [[ ! -f "$input" ]]; then printf 'Input file not found: %s\n' "$input" >&2; exit 1; fi
 if [[ ! -f "$template" ]]; then printf 'Template not found: %s\n' "$template" >&2; exit 1; fi
 input_dir=$(cd "$(dirname "$input")" && pwd)

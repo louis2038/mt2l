@@ -1,6 +1,6 @@
-#import "@local/mt2l:0.1.2": paper, abstract, theorem, proposition, lemma, corollary, conjecture, definition, assumption, example, remark, proof, solution, equation, xref, citep, citet, citeauthor, citeyear, references, paper-figure, paper-table, appendix, glue
+#import "../../templates/paper/binding.typ": template, abstract, theorem, proposition, lemma, corollary, conjecture, definition, assumption, example, remark, proof, solution, equation, xref, citep, citet, citeauthor, citeyear, references, paper-figure, paper-table, appendix, glue
 
-#show: paper.with(
+#show: template.with(
   title: "A paper written in Typst",
   authors: ("First Author", "Second Author"),
   affiliations: ("Department of Mathematics, Example University",),

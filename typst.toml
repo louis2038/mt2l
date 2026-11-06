@@ -11,6 +11,6 @@ categories = ["integration", "utility"]
 description = "Write exportable papers and define modular Typst-to-LaTeX contracts."
 
 [template]
-path = "starter"
+path = "templates/paper"
 entrypoint = "main.typ"
 thumbnail = "thumbnail.png"

@@ -84,7 +84,7 @@ cleanup() {
   return "$status"
 }
 trap cleanup EXIT
-mkdir -p "$staging/scripts/mt2l" "$staging/templates" "$staging/examples" "$staging/starter"
+mkdir -p "$staging/scripts/mt2l" "$staging/templates" "$staging/examples"
 install -m 644 "$source_root/typst.toml" "$source_root/mt2l.typ" "$source_root/core.typ" "$source_root/README.md" "$source_root/LICENSE" "$staging/"
 install -m 644 "$source_root/scripts/mt2l.lua" "$source_root/scripts/dependencies.sh" "$staging/scripts/"
 install -m 644 "$source_root/scripts/manage.sh" "$staging/scripts/"
@@ -92,10 +92,8 @@ install -m 755 "$source_root/install.sh" "$source_root/get.sh" "$staging/"
 install -m 644 "$source_root/scripts/mt2l/lexer.lua" "$staging/scripts/mt2l/"
 install -m 644 "$source_root/scripts/mt2l/natural.lua" "$staging/scripts/mt2l/"
 install -m 755 "$source_root/scripts/convert.sh" "$staging/scripts/"
-install -m 644 "$source_root/templates/"*.tex "$source_root/templates/"*.typ "$source_root/templates/LICENSE-latex-paper" "$staging/templates/"
-install -m 644 "$source_root/examples/"*.typ "$staging/examples/"
-install -m 644 "$source_root/examples/paper.bib" "$staging/examples/"
-install -m 644 "$source_root/starter/"* "$staging/starter/"
+cp -R "$source_root/templates/." "$staging/templates/"
+cp -R "$source_root/examples/." "$staging/examples/"
 printf 'mt2l %s\n' "$version" > "$staging/.mt2l-managed"
 {
   printf '#!/usr/bin/env bash\n# Installed by mt2l/install.sh.\n'
@@ -131,7 +129,7 @@ if [[ ! -L "$legacy_parent" && ! -L "$legacy_package" &&
   rmdir -- "$legacy_parent" 2>/dev/null || true
 fi
 printf 'Installed mt2l %s\nPackage: %s\nCommand: %s\n' "$version" "$destination" "$command_path"
-printf '\nIn Typst:\n  #import "@local/mt2l:%s": mt2l, mt2l-export-meta\n\nNew paper:\n  mt2l --init my-paper\n\nExport:\n  mt2l main.typ\n' "$version"
+printf '\nIn Typst:\n  #import "@local/mt2l:%s": mt2l, mt2l-export-meta\n\nNew paper:\n  mt2l init paper my-paper\n\nExport (inside my-paper):\n  mt2l main.typ --template latex_template/paper.tex\n' "$version"
 resolved_command=$(command -v mt2l || true)
 if [[ -n "$resolved_command" && "$resolved_command" != "$command_path" ]]; then
   printf '\nAnother mt2l takes precedence in PATH: %s\nUse the installed command directly:\n  %q main.typ\n' "$resolved_command" "$command_path"

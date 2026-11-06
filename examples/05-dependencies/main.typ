@@ -1,6 +1,6 @@
-#import "@local/mt2l:0.1.2": paper, abstract, definition, lemma, theorem, corollary, proof, remark, notation, link-graph
+#import "../../templates/paper/binding.typ": template, abstract, definition, lemma, theorem, corollary, proof, remark, notation, link-graph
 
-#show: paper.with(title: "Statements and their dependencies", authors: ("Your Name",))
+#show: template.with(title: "Statements and their dependencies", authors: ("Your Name",))
 
 #abstract[
   Declare mathematical dependencies once. The graph and proof headings use

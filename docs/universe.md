@@ -9,10 +9,22 @@ functions. The same document still compiles normally with Typst.
 > Typst package does not install or run the exporter. The CLI requires
 > **Typst >= 0.15** and **Pandoc >= 3.7**.
 
-````typst
-#import "@local/mt2l:0.1.2": paper, abstract, theorem, proof
+Create a project with editable Typst and LaTeX templates:
 
-#show: paper.with(title: "My paper", authors: ("Your Name",))
+```sh
+mt2l init paper my-paper    # Or: mt2l init default my-document
+cd my-paper
+```
+
+For an offline copy of the installed model, use
+`mt2l init --local paper my-paper` instead.
+
+Edit the generated `main.typ`:
+
+````typst
+#import "binding.typ": template, abstract, theorem, proof
+
+#show: template.with(title: "My paper", authors: ("Your Name",))
 
 #abstract[The question, method, and main result.]
 
@@ -32,16 +44,17 @@ See @eq:3.
 Export from your terminal:
 
 ```sh
-mt2l --init my-paper                   # Create a ready-to-edit paper
-mt2l my-paper/main.typ                 # Export the paper to main.tex
-mt2l main.typ                          # Write main.tex
-mt2l main.typ build/article.tex        # Choose the output file
-mt2l --root . main.typ build/main.tex  # Set the Typst project root
+mt2l main.typ --template latex_template/paper.tex
+mt2l main.typ build/article.tex --template latex_template/paper.tex
+mt2l main.typ                          # Minimal article, without the paper style
 ```
 
-The paper layout and its LaTeX template are selected automatically.
-Use `typst compile main.typ` for the normal Typst PDF. The current local
-import becomes `@preview/mt2l:0.1.2` once accepted on Typst Universe.
+Edit `template.typ` to change native Typst functions and show rules.
+Edit `binding.typ` to change their LaTeX conversion bindings. Edit
+`latex_template/paper.tex` to change the LaTeX layout. The LaTeX template
+is selected only by `--template FILE`; it is never inferred from Typst styling.
+Without that option, mt2l uses a minimal article template with no theorem
+environments. Use `typst compile main.typ` for the native Typst PDF.
 
 ## Installation
 
@@ -63,12 +76,9 @@ The installer selects the latest stable `vX.Y.Z` tag from GitHub and upgrades
 older installations. It skips reinstalling the same version and does not
 downgrade a newer installation unless `--force` is requested.
 
-The `@preview` import requires publication on Typst Universe. Until it is
-available, use the local installation below.
-
 ### Fully local installation
 
-From a checkout of this repository:
+From a checkout of the [mt2l repository](https://github.com/louis2038/mt2l):
 
 ```sh
 ./install.sh
@@ -129,8 +139,20 @@ pdflatex article.tex
 
 ### Ready-to-use paper environment
 
-`mt2l --init my-paper` creates a starter document and BibTeX bibliography.
-You can also use `typst init @local/mt2l:0.1.2 my-paper` after local installation.
+`mt2l init paper my-paper` downloads the complete paper directory and creates `main.typ`, `paper.bib`, `template.typ`, `binding.typ`, and
+`latex_template/paper.tex` in `my-paper/`. `mt2l init default my-document`
+creates a minimal document and `latex_template/default.tex` instead. The
+destination defaults to the model name when omitted. Existing
+destinations are never overwritten. The paper preset also includes its MIT
+attribution in `latex_template/LICENSE-latex-paper`.
+
+Each model supplies its own reusable helpers. Its `template.typ`
+contains native functions and set/show rules. `binding.typ` imports those
+functions and wraps them with their LaTeX equivalents. Its `template` function is applied
+with `#show: template.with(...)`. `paper-layout` only provides the title block
+and export metadata; it installs no statement or equation show rules.
+To use your own LaTeX layout, pass its path to `--template FILE`. All
+required LaTeX packages and environment definitions belong in that file.
 
 The package includes title and abstract formatting; theorem, proposition,
 lemma, corollary, conjecture, definition, assumption, example, remark, proof,
@@ -151,7 +173,7 @@ can differ between engines.
 
 Read the [paper guide](https://github.com/louis2038/mt2l/blob/main/docs/PAPER.md)
 for every option and binding. The complete example is
-[`examples/paper.typ`](https://github.com/louis2038/mt2l/blob/main/examples/paper.typ).
+[`examples/06-complete-paper/main.typ`](https://github.com/louis2038/mt2l/blob/main/examples/06-complete-paper/main.typ).
 Write ordinary Typst equations and labels: `$ x ∈ {0,1} $<eq:3>`,
 `#theorem[... ]<thm:main>`, and `@thm:main`. Labeled displays are numbered;
 unlabeled displays stay unnumbered. Citations use `@key`, `@key[p. 2]`, or
@@ -262,8 +284,8 @@ contracts are supported.
 #highlight[First], #emphasis[second], #adapters.highlight[third].
 ```
 
-See [the adapter module](https://github.com/louis2038/mt2l/blob/main/examples/adapters.typ)
-and [its document](https://github.com/louis2038/mt2l/blob/main/examples/main.typ).
+See [the adapter module](https://github.com/louis2038/mt2l/blob/main/examples/03-modular/binding.typ)
+and [its document](https://github.com/louis2038/mt2l/blob/main/examples/03-modular/main.typ).
 
 ### Arguments and local metadata
 
@@ -403,11 +425,66 @@ Templates use [Pandoc syntax](https://pandoc.org/MANUAL.html#templates):
 dollar as `$$` inside a template. This escaping does not apply to the literal
 `typst-preamble`.
 
-### CLI
+### Template directories
+
+Each preset contains its own starter `main.typ`, bibliography, and two
+implementation files (`template.typ` and `binding.typ`):
 
 ```text
-mt2l [--root DIR] [--template FILE] INPUT [OUTPUT]
-mt2l --init [DIR]
+templates/
+  default/
+    main.typ
+    paper.bib
+    template.typ
+    binding.typ
+    latex_template/default.tex
+  paper/
+    main.typ
+    paper.bib
+    template.typ
+    binding.typ
+    latex_template/paper.tex
+    latex_template/LICENSE-latex-paper
+```
+
+`template.typ` defines native Typst functions and styling. `binding.typ`
+imports it and defines each function's LaTeX equivalent with `mt2l`.
+The document imports `binding.typ` and applies `#show: template.with(...)`.
+
+To add a preset, copy a directory (for example, `paper` to `paper2`), edit
+its two Typst files and LaTeX template, then register its directory in the
+`MT2L_TEMPLATES` array at the top of `scripts/convert.sh`:
+
+```bash
+"paper2=$converter_root/templates/paper2"
+```
+
+Include `main.typ` and all resources directly in that directory. The starter
+imports `binding.typ` and applies `#show: template.with(...)`. The package
+entrypoint exposes only `mt2l` and `mt2l-export-meta`; all template-specific
+functions belong to the local files.
+
+After publishing a release and reinstalling, use `mt2l init paper2 my-project`.
+Init downloads the archive for the installed CLI version (`vX.Y.Z`), extracts
+only the registered template directory, and copies its entire contents into
+the destination. It never overwrites an existing destination. To use templates
+from a local checkout or installation without downloading:
+
+```sh
+mt2l init --local paper2 my-project
+```
+
+The native and LaTeX templates remain editable in the new project. Export
+selects the LaTeX file explicitly; no template is inferred from the Typst style.
+
+### CLI
+
+Run `mt2l --help` (or `mt2l init --help`) to list available models, their
+LaTeX files, and the directory used by `init --local`.
+
+```text
+mt2l INPUT [OUTPUT] [--template FILE] [--root DIR]
+mt2l init [--local] NAME [DIR]
 mt2l --help
 mt2l --version
 mt2l --update [--version X.Y.Z] [--force]
@@ -418,9 +495,11 @@ mt2l --uninstall
 folders are created automatically. `--root` defaults to the input directory;
 set it when your document imports files from parent folders.
 
-`--init` creates a new paper folder (default: `paper`) and refuses to overwrite
-an existing folder. `--template paper` selects the bundled paper LaTeX
-template explicitly. `paper.with(...)` selects it automatically.
+`init` downloads the complete model directory from the matching GitHub tag.
+`init --local` copies the bundled directory without network access. `--template` accepts a
+file path, such as `latex_template/paper.tex`; preset names are not accepted
+as shortcuts. Options may appear before or after the input filename.
+Omitting `--template` always uses the minimal article template.
 
 For a source checkout, `./scripts/convert.sh` accepts the same arguments.
 
@@ -446,21 +525,16 @@ On Linux, the package and exporter are installed under
   must use `#name(...)` or `#name[...]`. Dynamic contract factories and indirect
   calls inside Typst code are not intercepted.
 - Import paths must be literal. Contract discovery supports local files and
-  the bundled mt2l paper helpers. Adapters declared in other installed packages
+  the model bindings in your project. Adapters declared in other installed packages
   are not discovered automatically.
 - The package can be imported in the Typst web app, but LaTeX export runs
   through the external CLI on your computer.
 
 ## Examples
 
-- [Complete paper](https://github.com/louis2038/mt2l/blob/main/examples/paper.typ)
-- [Natural Typst syntax](https://github.com/louis2038/mt2l/blob/main/examples/natural.typ)
-- [Statement dependencies and graph](https://github.com/louis2038/mt2l/blob/main/examples/dependencies.typ)
-- [Package quickstart](https://github.com/louis2038/mt2l/blob/main/examples/package.typ)
-- [Modular document](https://github.com/louis2038/mt2l/blob/main/examples/main.typ)
-- [CeTZ and Pavemat](https://github.com/louis2038/mt2l/blob/main/examples/packages.typ)
+Work through the [example guide](https://github.com/louis2038/mt2l/blob/main/examples/README.md)
+from plain text to custom bindings, modular PDF rendering, papers, dependency
+graphs, full paper features, and third-party drawing packages. Each numbered
+directory has its own `main.typ`; generated files belong in `build/`.
 
-## License
-
-[MIT](LICENSE). Copyright (c) 2026 louis2038.
-Paper template attribution: [latex-paper license](templates/LICENSE-latex-paper).
+MIT licensed. Paper layout attribution is included with its LaTeX template.

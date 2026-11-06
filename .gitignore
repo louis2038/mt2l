@@ -11,24 +11,17 @@
 !/install.sh
 !/thumbnail.png
 
-!/starter/
-!/starter/main.typ
-!/starter/paper.bib
-
 !/docs/
 !/docs/PUBLISHING.md
 !/docs/universe.md
 !/docs/PAPER.md
 
 !/examples/
-!/examples/adapters.typ
-!/examples/main.typ
-!/examples/package.typ
-!/examples/packages.typ
-!/examples/paper.typ
-!/examples/paper.bib
-!/examples/dependencies.typ
-!/examples/natural.typ
+!/examples/README.md
+!/examples/*/
+!/examples/*/main.typ
+!/examples/*/binding.typ
+!/examples/*/paper.bib
 
 !/scripts/
 !/scripts/convert.sh
@@ -40,8 +33,12 @@
 !/scripts/mt2l/natural.lua
 
 !/templates/
-!/templates/default.tex
-!/templates/paper.typ
-!/templates/statements.typ
-!/templates/paper.tex
-!/templates/LICENSE-latex-paper
+!/templates/*/
+!/templates/*/.gitignore
+!/templates/*/main.typ
+!/templates/*/paper.bib
+!/templates/*/template.typ
+!/templates/*/binding.typ
+!/templates/*/latex_template/
+!/templates/*/latex_template/*.tex
+!/templates/*/latex_template/LICENSE*

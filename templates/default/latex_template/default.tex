@@ -1,0 +1,21 @@
+% Minimal mt2l article. Copy and edit this file to define your own style.
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+$for(header-includes)$
+$header-includes$
+$endfor$
+$if(paper.title)$
+\title{$paper.title$}
+\author{$for(paper.authors)$$paper.authors$$sep$ \and $endfor$}
+\date{$paper.date$}
+$endif$
+\begin{document}
+$if(paper.title)$\maketitle$endif$
+$body$
+\end{document}
