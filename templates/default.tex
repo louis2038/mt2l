@@ -1,3 +1,6 @@
+$if(mt2l-paper)$
+$paper.tex()$
+$else$
 % Generic default Pandoc LaTeX template for mt2l.
 \documentclass[$if(fontsize)$$fontsize$,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$if(documentclass)$$documentclass$$else$article$endif$}
 
@@ -7,6 +10,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage[dvipsnames]{xcolor}
+\usepackage[authoryear,round]{natbib}
 \usepackage{hyperref}
 \providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
@@ -49,3 +53,4 @@ $if(toc)$\tableofcontents$endif$
 $body$
 
 \end{document}
+$endif$

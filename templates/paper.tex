@@ -1,0 +1,115 @@
+% mt2l paper: a standalone adaptation inspired by pmichaillat/latex-paper.
+% Copyright (c) 2022-present Pascal Michaillat; (c) 2026 louis2038.
+% MIT licensed; see templates/LICENSE-latex-paper in the mt2l distribution.
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+% The above copyright notice and this permission notice shall be included in all
+% copies or substantial portions of the Software.
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+% SOFTWARE.
+\documentclass[$if(paper.fontsize)$$paper.fontsize$$else$11pt$endif$,$if(paper.size)$$paper.size$$else$a4paper$endif$]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,textcomp}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[left=0.163\paperwidth,right=0.163\paperwidth,top=25.4mm,bottom=30.5mm,footskip=12mm]{geometry}
+\usepackage{setspace,microtype}
+\setstretch{1.25}
+\setlength{\parindent}{1.4em}
+\setlength{\parskip}{0.4em}
+\AtBeginDocument{\frenchspacing\allowdisplaybreaks[1]}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{booktabs,longtable,array,calc}
+\usepackage{caption}
+\captionsetup{labelsep=period}
+\captionsetup[table]{position=top,hypcap=false}
+\renewcommand{\arraystretch}{1.2}
+\usepackage{titlesec}
+\titleformat{\section}{\centering\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection.}{1em}{}
+\titleformat{\subsubsection}{\itshape}{\thesubsubsection.}{1em}{}
+\usepackage{enumitem}
+\setlist{leftmargin=1.4em,topsep=0.5em,itemsep=0.3em,parsep=0pt}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\passthrough}[1]{#1}
+\providecommand{\pandocbounded}[1]{#1}
+\usepackage[authoryear,round]{natbib}
+\setcitestyle{aysep={}}
+\setlength{\bibsep}{0pt}
+\setlength{\bibhang}{1.4em}
+\renewcommand{\bibfont}{\small}
+\usepackage{aliascnt}
+\usepackage{framed}
+% The heading stays outside the rule, which frames only the environment body.
+\newenvironment{mt2lruled}{\leavevmode\par\nobreak\def\FrameCommand{\textcolor{gray}{\vrule width0.6pt}\hspace{0.65em}}\MakeFramed{\advance\hsize-\width\FrameRestore\setlength{\parindent}{0pt}}}{\endMakeFramed}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=MidnightBlue,citecolor=MidnightBlue,urlcolor=MidnightBlue,pdfdisplaydoctitle=true}
+\usepackage[capitalise,noabbrev,nameinlink]{cleveref}
+
+% Shared statement numbering; independent example numbering. aliascnt keeps
+% cleveref's reference names correct even when environments share a counter.
+\newtheoremstyle{mt2lpaper}{0.8em}{0.8em}{\itshape}{}{\scshape}{.}{0.5em}{}
+\theoremstyle{mt2lpaper}
+\newtheorem{theorem}{Theorem}
+\newcommand{\mtstatement}[2]{\newaliascnt{#1}{theorem}\newtheorem{#1}[#1]{#2}\aliascntresetthe{#1}\expandafter\def\csname the#1\endcsname{\thetheorem}}
+\mtstatement{proposition}{Proposition}
+\mtstatement{lemma}{Lemma}
+\mtstatement{corollary}{Corollary}
+\mtstatement{conjecture}{Conjecture}
+\mtstatement{assumption}{Assumption}
+\newtheoremstyle{mt2lupright}{0.8em}{0.8em}{\normalfont}{}{\scshape}{.}{0.5em}{}
+\theoremstyle{mt2lupright}
+\mtstatement{definition}{Definition}
+\newtheorem*{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem*{solution}{Solution}
+\newtheorem*{notation}{Notation}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{conjecture}{Conjecture}{Conjectures}
+\crefname{assumption}{Assumption}{Assumptions}
+\crefname{definition}{Definition}{Definitions}
+\crefname{example}{Example}{Examples}
+\crefname{equation}{Equation}{Equations}
+\crefname{section}{Section}{Sections}
+\crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+$if(highlighting-macros)$
+\usepackage{fancyvrb,framed}
+$highlighting-macros$
+$endif$
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+\title{\bfseries\LARGE $if(paper.title)$$paper.title$$else$Untitled paper$endif$}
+\author{$for(paper.authors)$$paper.authors$$sep$ \qquad $endfor$$if(paper.affiliations)$\\[0.5em]{\small $for(paper.affiliations)$$paper.affiliations$$sep$ \\ $endfor$}$endif$}
+\date{$paper.date$}
+\begin{document}
+\maketitle
+$if(paper.url)$
+\begin{center}\small\href{$paper.url$}{\texttt{$paper.url$}}\end{center}
+$endif$
+$if(paper.acknowledgements)$
+{\small\noindent $paper.acknowledgements$\par}
+$endif$
+$if(paper.keywords)$
+{\small\noindent\textbf{Keywords:} $for(paper.keywords)$$paper.keywords$$sep$, $endfor$\par}
+$endif$
+
+$body$
+
+\end{document}

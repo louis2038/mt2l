@@ -6,18 +6,29 @@
 !/README.md
 !/typst.toml
 !/mt2l.typ
+!/core.typ
 !/get.sh
 !/install.sh
+!/thumbnail.png
+
+!/starter/
+!/starter/main.typ
+!/starter/paper.bib
 
 !/docs/
 !/docs/PUBLISHING.md
 !/docs/universe.md
+!/docs/PAPER.md
 
 !/examples/
 !/examples/adapters.typ
 !/examples/main.typ
 !/examples/package.typ
 !/examples/packages.typ
+!/examples/paper.typ
+!/examples/paper.bib
+!/examples/dependencies.typ
+!/examples/natural.typ
 
 !/scripts/
 !/scripts/convert.sh
@@ -26,6 +37,11 @@
 !/scripts/mt2l.lua
 !/scripts/mt2l/
 !/scripts/mt2l/lexer.lua
+!/scripts/mt2l/natural.lua
 
 !/templates/
 !/templates/default.tex
+!/templates/paper.typ
+!/templates/statements.typ
+!/templates/paper.tex
+!/templates/LICENSE-latex-paper

@@ -1,6 +1,6 @@
 [package]
 name = "mt2l"
-version = "0.1.1"
+version = "0.1.2"
 entrypoint = "mt2l.typ"
 compiler = "0.15.0"
 authors = ["louis2038 <@louis2038>"]
@@ -8,4 +8,9 @@ license = "MIT"
 repository = "https://github.com/louis2038/mt2l"
 keywords = ["latex", "conversion", "pandoc", "modular"]
 categories = ["integration", "utility"]
-description = "Define modular Typst-to-LaTeX conversion contracts."
+description = "Write exportable papers and define modular Typst-to-LaTeX contracts."
+
+[template]
+path = "starter"
+entrypoint = "main.typ"
+thumbnail = "thumbnail.png"

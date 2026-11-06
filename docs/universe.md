@@ -1,9 +1,8 @@
 # mt2l — Modular Typst to LaTeX
 
-Write in Typst and define how your custom functions export to LaTeX, directly
-in your document. Use editable LaTeX for text and mathematical structures,
-and render complex Typst graphics as PDF assets. The same document still
-compiles normally with Typst.
+Write research papers in Typst and export editable LaTeX. Start with the
+built-in paper environment, or define conversion bindings for your own
+functions. The same document still compiles normally with Typst.
 
 > [!WARNING]
 > **LaTeX export requires the `mt2l` command-line utility.** Importing the
@@ -11,29 +10,38 @@ compiles normally with Typst.
 > **Typst >= 0.15** and **Pandoc >= 3.7**.
 
 ````typst
-#import "@preview/mt2l:0.1.1": mt2l
+#import "@local/mt2l:0.1.2": paper, abstract, theorem, proof
 
-#let highlight = mt2l(
-  fn: strong,
-  placement: "inline",
-  latex-template: ```latex
-\textbf{$BODY$}
-```,
-)
+#show: paper.with(title: "My paper", authors: ("Your Name",))
 
-Before #highlight[important text] after.
+#abstract[The question, method, and main result.]
+
+= Introduction
+
+Our main result is @thm:main.
+
+#theorem(name: [A simple bound])[For real $x$, $x^2 >= 0$.]<thm:main>
+
+#proof(depend: <thm:main>)[The product of two equal real numbers is nonnegative.]
+
+$ x ∈ {0,1} $<eq:3>
+
+See @eq:3.
 ````
 
 Export from your terminal:
 
 ```sh
+mt2l --init my-paper                   # Create a ready-to-edit paper
+mt2l my-paper/main.typ                 # Export the paper to main.tex
 mt2l main.typ                          # Write main.tex
 mt2l main.typ build/article.tex        # Choose the output file
 mt2l --root . main.typ build/main.tex  # Set the Typst project root
 ```
 
-The example produces `Before \textbf{important text} after.` in LaTeX.
-Use `typst compile main.typ` for the normal Typst PDF.
+The paper layout and its LaTeX template are selected automatically.
+Use `typst compile main.typ` for the normal Typst PDF. The current local
+import becomes `@preview/mt2l:0.1.2` once accepted on Typst Universe.
 
 ## Installation
 
@@ -42,7 +50,7 @@ Use `typst compile main.typ` for the normal Typst PDF.
 Import the package in your document:
 
 ```typst
-#import "@preview/mt2l:0.1.1": mt2l, mt2l-export-meta
+#import "@preview/mt2l:0.1.2": mt2l, mt2l-export-meta
 ```
 
 Install the CLI on Linux or macOS, without sudo:
@@ -69,7 +77,7 @@ From a checkout of this repository:
 Then use the local package:
 
 ```typst
-#import "@local/mt2l:0.1.1": mt2l, mt2l-export-meta
+#import "@local/mt2l:0.1.2": mt2l, mt2l-export-meta
 ```
 
 This installs both the package and the CLI from your local files, without
@@ -88,7 +96,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ```sh
 mt2l --update                       # Check GitHub and install the latest stable version
-mt2l --update --version 0.1.1       # Select a specific version
+mt2l --update --version 0.1.2       # Select a specific version
 mt2l --update --force               # Reinstall even if already current
 mt2l --uninstall                    # Remove mt2l from this installation
 ```
@@ -119,6 +127,41 @@ pdflatex article.tex
 
 ## Features
 
+### Ready-to-use paper environment
+
+`mt2l --init my-paper` creates a starter document and BibTeX bibliography.
+You can also use `typst init @local/mt2l:0.1.2 my-paper` after local installation.
+
+The package includes title and abstract formatting; theorem, proposition,
+lemma, corollary, conjecture, definition, assumption, example, remark, proof,
+and solution environments; numbered equations; cross-references; figures;
+editable tables; citations; bibliographies; and appendices. Statements accept
+`depend` to declare prerequisites, `link-graph()` displays their dependency
+graph, and `proof(depend: "thm-main")` automatically names the result being
+proved. Proof and remark headings stay above the rule beside their content.
+The dependency graph exports as a cropped PDF asset. All paper helpers
+already have conversion bindings. No manual wrappers or copied style files
+are required.
+
+The LaTeX layout is inspired by
+[Pascal Michaillat's latex-paper](https://github.com/pmichaillat/latex-paper),
+adapted for portable fonts and shared statement counters. The Typst layout
+uses STIX Two and serif fallbacks. Pagination and bibliography formatting
+can differ between engines.
+
+Read the [paper guide](https://github.com/louis2038/mt2l/blob/main/docs/PAPER.md)
+for every option and binding. The complete example is
+[`examples/paper.typ`](https://github.com/louis2038/mt2l/blob/main/examples/paper.typ).
+Write ordinary Typst equations and labels: `$ x ∈ {0,1} $<eq:3>`,
+`#theorem[... ]<thm:main>`, and `@thm:main`. Labeled displays are numbered;
+unlabeled displays stay unnumbered. Citations use `@key`, `@key[p. 2]`, or
+`#cite(<key>, form: "prose")`, with a normal `#bibliography("paper.bib")`.
+The explicit `equation`, `xref`, and citation helpers remain available.
+
+Pandoc already parses the mathematics and citations; mt2l uses its natbib
+writer. The paper bindings preserve the labels, reference types, and citation
+options that the Typst reader in Pandoc 3.7 does not retain.
+
 ### Editable LaTeX: `syntax`
 
 Wrap a Typst function with a conversion contract. In normal Typst compilation,
@@ -128,7 +171,7 @@ Wrap a Typst function with a conversion contract. In normal Typst compilation,
 For example, define a custom theorem and its LaTeX environment:
 
 ````typst
-#import "@preview/mt2l:0.1.1": mt2l
+#import "@preview/mt2l:0.1.2": mt2l
 
 #let theorem(name: none, body) = block[
   #strong[Theorem: #name]
@@ -168,7 +211,7 @@ This is useful for CeTZ drawings, styled matrices, and other graphics that
 should retain their Typst appearance.
 
 ````typst
-#import "@preview/mt2l:0.1.1": mt2l
+#import "@preview/mt2l:0.1.2": mt2l
 
 #let disk = mt2l(
   fn: circle,
@@ -272,7 +315,7 @@ Export contextual values to both the outer document template and individual
 contracts with `mt2l-export-meta`:
 
 ```typst
-#import "@preview/mt2l:0.1.1": mt2l-export-meta
+#import "@preview/mt2l:0.1.2": mt2l-export-meta
 
 #set text(size: 10pt)
 #mt2l-export-meta(ctx => (
@@ -308,6 +351,11 @@ $endfor$
 
 ### Reliable exports
 
+The output's `*-assets` directory contains permanent resources, including
+copied `.bib` files and rendered PDFs. Keep it beside the `.tex` when moving
+or sharing the export. Cleanup removes only temporary files; the CLI checks
+that all exported resources still exist before replacing the `.tex`.
+
 Comments and raw code examples are left untouched. Conversion errors identify
 the affected contract and source location where available. A failed conversion
 does not replace the previous `.tex` file, and each PDF is replaced only after
@@ -321,11 +369,16 @@ successful rendering. Old assets are kept rather than deleted automatically.
 | --- | --- |
 | `fn` | Original Typst function. Required. |
 | `mode` | `"syntax"` (default) or `"pdfrender"`. |
-| `placement` | `"auto"` (default), `"inline"`, or `"block"`. |
+| `placement` | `"auto"` (default), `"inline"`, `"block"`, or `"document"` for `#show: name.with(...)`. |
 | `latex-template` | Fenced raw block containing a Pandoc template. Required. |
-| `typst-template` | Fenced raw block for the PDF document. Required for `pdfrender`. |
+| `typst-template` | Fenced raw block for the PDF document. Required for isolated `pdfrender`. |
 | `typst-preamble` | Literal Typst definitions prepended to isolated conversions. |
 | `latex-preamble` | LaTeX definitions added once to the outer document. |
+| `body-format` | `"latex"` (default), or `"math"` to extract one equation without math delimiters. |
+| `asset-argument` | Name of a file argument copied into output assets; a literal string or `path("file")`. In `syntax` mode, its exported location is `PATH`. |
+| `reference-argument` | Name of an argument converted to `\cref{...}`; accepts literal IDs, labels, or tuples of them. |
+| `label-argument` | Consume a trailing `<label>` as this named export argument. The native function must return a labelable element; paper statements do. |
+| `render-context` | `"isolated"` (default), or `"document"` to render a `pdfrender` call with the complete document's counters and queries. A document render does not need `typst-template`. |
 
 ### Template variables
 
@@ -337,7 +390,7 @@ successful rendering. Old assets are kept rather than deleted automatically.
 | `LOCAL.name` | A converted value from `mt2l_variables`. |
 | `RAW.ARGS.name`, `RAW.LOCAL.name` | Unescaped source values; string quotes are removed. |
 | `RAW.BODY` | The original body source. |
-| `PATH` | Relative path of the PDF asset, in `pdfrender`. |
+| `PATH` | Relative path of a rendered PDF or a copied `asset-argument` file. |
 | `TARGET` | The original `fn` expression. |
 | `MODULE` | Adapter directory relative to the project root, prefixed with `/`; empty at the root. |
 
@@ -354,6 +407,7 @@ dollar as `$$` inside a template. This escaping does not apply to the literal
 
 ```text
 mt2l [--root DIR] [--template FILE] INPUT [OUTPUT]
+mt2l --init [DIR]
 mt2l --help
 mt2l --version
 mt2l --update [--version X.Y.Z] [--force]
@@ -364,14 +418,18 @@ mt2l --uninstall
 folders are created automatically. `--root` defaults to the input directory;
 set it when your document imports files from parent folders.
 
+`--init` creates a new paper folder (default: `paper`) and refuses to overwrite
+an existing folder. `--template paper` selects the bundled paper LaTeX
+template explicitly. `paper.with(...)` selects it automatically.
+
 For a source checkout, `./scripts/convert.sh` accepts the same arguments.
 
 ### Installation paths
 
 On Linux, the package and exporter are installed under
-`~/.local/share/typst/packages/local/mt2l/0.1.1/`, with the launcher in
+`~/.local/share/typst/packages/local/mt2l/0.1.2/`, with the launcher in
 `~/.local/bin/mt2l`. On macOS, package data defaults to
-`~/Library/Application Support/typst/packages/local/mt2l/0.1.1/`.
+`~/Library/Application Support/typst/packages/local/mt2l/0.1.2/`.
 
 | Environment variable | Purpose |
 | --- | --- |
@@ -387,13 +445,17 @@ On Linux, the package and exporter are installed under
 - Contracts must use `#let name = mt2l(...)` with literal options, and calls
   must use `#name(...)` or `#name[...]`. Dynamic contract factories and indirect
   calls inside Typst code are not intercepted.
-- Import paths must be literal. Contract discovery supports local files;
-  adapters declared in other installed packages are not discovered automatically.
+- Import paths must be literal. Contract discovery supports local files and
+  the bundled mt2l paper helpers. Adapters declared in other installed packages
+  are not discovered automatically.
 - The package can be imported in the Typst web app, but LaTeX export runs
   through the external CLI on your computer.
 
 ## Examples
 
+- [Complete paper](https://github.com/louis2038/mt2l/blob/main/examples/paper.typ)
+- [Natural Typst syntax](https://github.com/louis2038/mt2l/blob/main/examples/natural.typ)
+- [Statement dependencies and graph](https://github.com/louis2038/mt2l/blob/main/examples/dependencies.typ)
 - [Package quickstart](https://github.com/louis2038/mt2l/blob/main/examples/package.typ)
 - [Modular document](https://github.com/louis2038/mt2l/blob/main/examples/main.typ)
 - [CeTZ and Pavemat](https://github.com/louis2038/mt2l/blob/main/examples/packages.typ)
@@ -401,3 +463,4 @@ On Linux, the package and exporter are installed under
 ## License
 
 [MIT](LICENSE). Copyright (c) 2026 louis2038.
+Paper template attribution: [latex-paper license](templates/LICENSE-latex-paper).

@@ -98,18 +98,20 @@ math_end = function(s, start)
   error("unterminated math at byte " .. start, 0)
 end
 
-local function walk(s, first, last, mode, on_hash, on_comment)
+local function walk(s, first, last, mode, on_hash, on_comment, on_markup)
   local i = first
   while i <= last do
     local finish, char = M.opaque(s, i, mode ~= "markup"), s:sub(i, i)
-    if finish then
+    local jump = not finish and mode == "markup" and on_markup and on_markup(i, char)
+    if jump then i = jump
+    elseif finish then
       if on_comment and (s:sub(i, i + 1) == "//" or s:sub(i, i + 1) == "/*") then
         on_comment(i, finish - 1)
       end
       i = finish
     elseif mode == "markup" and char == "$" then
       finish = math_end(s, i)
-      walk(s, i + 1, finish - 1, "math", on_hash, on_comment)
+      walk(s, i + 1, finish - 1, "math", on_hash, on_comment, on_markup)
       i = finish + 1
     elseif char == "#" then
       local jump = on_hash and on_hash(i)
@@ -119,12 +121,12 @@ local function walk(s, first, last, mode, on_hash, on_comment)
         i = M.statement_end(s, i) + 1
       else
         finish = expression_end(s, i)
-        walk(s, i + 1, finish, "code", on_hash, on_comment)
+        walk(s, i + 1, finish, "code", on_hash, on_comment, on_markup)
         i = finish + 1
       end
     elseif mode == "code" and opens[char] then
       finish = M.balanced(s, i)
-      walk(s, i + 1, finish - 1, char == "[" and "markup" or "code", on_hash, on_comment)
+      walk(s, i + 1, finish - 1, char == "[" and "markup" or "code", on_hash, on_comment, on_markup)
       i = finish + 1
     else i = i + 1 end
   end
@@ -173,8 +175,8 @@ function M.statement_end(s, start)
   return #s
 end
 
-function M.hashes(s, visit)
-  walk(s, 1, #s, "markup", visit)
+function M.hashes(s, visit, markup)
+  walk(s, 1, #s, "markup", visit, nil, markup)
 end
 
 function M.remove_spans(s, spans)

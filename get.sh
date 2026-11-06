@@ -32,7 +32,7 @@ HELP
     return 2
   fi
   if [[ -n "$version" && ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    printf 'Expected a release version such as 0.1.1.\n' >&2
+    printf 'Expected a release version such as 0.1.2.\n' >&2
     return 2
   fi
   for program in curl tar mktemp sed sort tail grep; do

@@ -1,4 +1,4 @@
-#import "@local/mt2l:0.1.1": mt2l, mt2l-export-meta
+#import "@local/mt2l:0.1.2": mt2l, mt2l-export-meta
 
 #mt2l-export-meta(ctx => (title: "Un package, deux sorties", colorlinks: true))
 

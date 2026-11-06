@@ -27,21 +27,36 @@ supports `mt2l --update` and `mt2l --uninstall`.
 Prepare the submission from the repository root:
 
 ```sh
-package_dir="build/universe/packages/preview/mt2l/0.1.1"
+package_dir="build/universe/packages/preview/mt2l/0.1.2"
 mkdir -p "$package_dir"
-cp typst.toml mt2l.typ LICENSE "$package_dir/"
+mkdir -p "$package_dir/templates" "$package_dir/starter"
+cp typst.toml mt2l.typ core.typ LICENSE thumbnail.png "$package_dir/"
+cp templates/paper.typ templates/statements.typ templates/LICENSE-latex-paper "$package_dir/templates/"
+cp starter/paper.bib "$package_dir/starter/"
+sed 's/@local\/mt2l:/@preview\/mt2l:/g' starter/main.typ > "$package_dir/starter/main.typ"
 cp docs/universe.md "$package_dir/README.md"
 ```
 
 Fork [typst/packages](https://github.com/typst/packages), copy the prepared
-folder into `packages/preview/mt2l/0.1.1`, and open a pull request.
-Only the Typst API, manifest, README, and license belong in this submission.
-The external CLI stays in the mt2l GitHub repository.
+folder into `packages/preview/mt2l/0.1.2`, and open a pull request.
+The submission includes the Typst API, the paper module, the starter, the
+thumbnail, documentation, and licenses. The external CLI and the Pandoc LaTeX
+templates stay in the mt2l GitHub repository.
+
+The `[template]` manifest section enables `typst init` and the Universe
+template button. Regenerate the thumbnail after changing the starter layout:
+
+```sh
+typst compile --format png --pages 1 --ppi 150 starter/main.typ thumbnail.png
+```
+
+Check the prepared submission by initializing its starter with the local
+package path pointing at `build/universe/packages`, then compile that document.
 
 Once accepted, the public import is:
 
 ```typst
-#import "@preview/mt2l:0.1.1": mt2l, mt2l-export-meta
+#import "@preview/mt2l:0.1.2": mt2l, mt2l-export-meta
 ```
 
 A GitHub tag does not publish the package on Universe, and importing the
